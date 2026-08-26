@@ -78,6 +78,7 @@ function Navbar() {
           ) : (
             <Button variant="ghost" size="sm" render={<Link href="/login">Log in</Link>} />
           )}
+          <Button variant="ghost" size="sm" render={<Link href="/admin/login">Admin</Link>} />
           <Button size="sm" render={<Link href="/book">Book Now <ArrowUpRight className="size-3.5" /></Link>} />
         </div>
 
@@ -136,6 +137,15 @@ function Navbar() {
                   }
                 />
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                render={
+                  <Link href="/admin/login" onClick={() => setOpen(false)}>
+                    Admin login
+                  </Link>
+                }
+              />
               <Button
                 size="sm"
                 render={
