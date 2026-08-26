@@ -76,6 +76,7 @@ function Navbar() {
               </Button>
             </>
           ) : null}
+          <Button variant="outline" size="sm" render={<Link href="/admin-login">Admin</Link>} />
           <Button size="sm" render={<Link href="/book">Book Now <ArrowUpRight className="size-3.5" /></Link>} />
         </div>
 
