@@ -4,6 +4,8 @@ import { ArrowRight, ArrowUpRight, ShieldCheck, Timer, CalendarCheck, Sparkles, 
 
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
+import { HomeDateSelector } from '@/components/booking/home-date-selector'
+import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { SPORTS, PRICING_WINDOWS, OPERATING_HOURS, CURRENCY, DURATION_OPTIONS, formatPriceForDuration } from '@/lib/config'
 
@@ -30,10 +32,19 @@ const WHY_CHOOSE_US = [
   },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+  const { data: bookingSettings } = await supabase
+    .from('booking_settings')
+    .select('max_advance_days')
+    .eq('id', true)
+    .maybeSingle()
+  const maxAdvanceDays = bookingSettings?.max_advance_days ?? 2
+
   return (
     <>
       <Navbar />
+      <HomeDateSelector maxAdvanceDays={maxAdvanceDays} />
       <main>
         {/* ── COMPACT HERO ── */}
         <section className="relative overflow-hidden border-b-[3px] border-border-strong">

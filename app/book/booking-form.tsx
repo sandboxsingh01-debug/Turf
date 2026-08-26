@@ -20,6 +20,7 @@ interface SportRow {
 
 interface BookingFormProps {
   sports: SportRow[]
+  initialDate?: string
   defaultName: string
   defaultPhone: string
   defaultEmail: string
@@ -32,10 +33,10 @@ function todayIso() {
   ).padStart(2, '0')}`
 }
 
-export function BookingForm({ sports, defaultName, defaultPhone, defaultEmail }: BookingFormProps) {
+export function BookingForm({ sports, initialDate, defaultName, defaultPhone, defaultEmail }: BookingFormProps) {
   const router = useRouter()
   const [sportId, setSportId] = useState(sports[0]?.id ?? '')
-  const [date, setDate] = useState(todayIso())
+  const [date, setDate] = useState(initialDate && /^\d{4}-\d{2}-\d{2}$/.test(initialDate) ? initialDate : todayIso())
   const [durationMinutes, setDurationMinutes] = useState(60)
   const [slots, setSlots] = useState<SlotOption[]>([])
   const [selectedSlot, setSelectedSlot] = useState<SlotOption | null>(null)
