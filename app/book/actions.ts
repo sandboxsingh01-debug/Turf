@@ -1,16 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-
 import { createClient } from '@/lib/supabase/server'
-import {
-  calculateTotal,
-  generateCandidateSlots,
-  minutesToTime,
-  resolvePricingWindow,
-  timeToMinutes,
-  type PricingWindowRow,
-} from '@/lib/slots'
+import { generateCandidateSlots, minutesToTime, resolvePricingWindow, timeToMinutes, type PricingWindowRow } from '@/lib/slots'
+
+const VALID_DURATIONS = new Set([30, 60, 90, 120])
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+const TIME_RE = /^(?:[01]\d|2[0-3]):[0-5]\d$/
 
 export interface SlotOption {
   startTime: string
@@ -22,70 +18,47 @@ export interface SlotOption {
   pricingWindowLabel: string | null
 }
 
-export async function getAvailableSlots(input: {
-  sportId: string
-  date: string
-  durationMinutes: number
-}): Promise<{ slots: SlotOption[] } | { error: string }> {
+function isValidDate(date: string) {
+  if (!DATE_RE.test(date)) return false
+  const parsed = new Date(`${date}T00:00:00`)
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date
+}
+
+function calculateSplitTotal(start: number, end: number, windows: PricingWindowRow[]) {
+  let total = 0
+  for (let cursor = start; cursor < end;) {
+    const window = resolvePricingWindow(cursor, windows)
+    if (!window) return null
+    let windowEnd = timeToMinutes(window.end_time)
+    if (windowEnd <= timeToMinutes(window.start_time)) windowEnd += 1440
+    const segmentEnd = Math.min(end, windowEnd)
+    total += ((segmentEnd - cursor) * window.hourly_rate) / 60
+    cursor = segmentEnd
+  }
+  return Math.round(total)
+}
+
+export async function getAvailableSlots(input: { sportId: string; date: string; durationMinutes: number }): Promise<{ slots: SlotOption[] } | { error: string }> {
+  if (!input.sportId || !isValidDate(input.date) || input.date < new Date().toISOString().slice(0, 10)) return { error: 'Please choose a valid future date.' }
+  if (!VALID_DURATIONS.has(input.durationMinutes)) return { error: 'Please choose a valid duration.' }
   const supabase = await createClient()
-
-  const { data: pricingWindows, error: pricingError } = await supabase
-    .from('pricing')
-    .select('id, start_time, end_time, price_per_hour')
-    .eq('active', true)
-    .order('start_time')
-
-  if (pricingError) {
-    return { error: 'Could not load pricing. Please try again.' }
-  }
-
-  const { data: existingBookings, error: bookingsError } = await supabase
-    .from('bookings')
-    .select('start_time, end_time')
-    .eq('sport_id', input.sportId)
-    .eq('booking_date', input.date)
-    .in('booking_status', ['pending', 'confirmed'])
-
-  if (bookingsError) {
-    return { error: 'Could not check availability. Please try again.' }
-  }
-
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
-    today.getDate(),
-  ).padStart(2, '0')}`
-  const isToday = input.date === todayStr
-  const nowMinutes = today.getHours() * 60 + today.getMinutes()
-
-  const candidates = generateCandidateSlots(
-    input.durationMinutes,
-    existingBookings ?? [],
-    isToday,
-    nowMinutes,
-  )
-
-  const windows: PricingWindowRow[] = (pricingWindows ?? []).map((row) => ({
-    id: row.id,
-    start_time: row.start_time,
-    end_time: row.end_time,
-    hourly_rate: Number(row.price_per_hour),
-  }))
-
-  const slots: SlotOption[] = candidates.map((slot) => {
+  const [{ data: pricingRows, error: pricingError }, { data: sports, error: sportError }] = await Promise.all([
+    supabase.from('pricing').select('id, start_time, end_time, price_per_hour').eq('active', true).order('start_time'),
+    supabase.from('sports').select('id').eq('id', input.sportId).eq('active', true).maybeSingle(),
+  ])
+  if (pricingError || sportError) return { error: 'Could not load booking options. Please try again.' }
+  if (!sports) return { error: 'That sport is not available.' }
+  const { data: existingBookings, error } = await supabase.from('bookings').select('start_time, end_time').eq('sport_id', input.sportId).eq('booking_date', input.date).in('booking_status', ['pending_payment', 'pending', 'confirmed'])
+  if (error) return { error: 'Could not check availability. Please try again.' }
+  const windows: PricingWindowRow[] = (pricingRows ?? []).map((row) => ({ id: row.id, label: '', range_label: null, start_time: row.start_time, end_time: row.end_time, hourly_rate: Number(row.price_per_hour) }))
+  const now = new Date()
+  const today = now.toISOString().slice(0, 10)
+  const candidates = generateCandidateSlots(input.durationMinutes, existingBookings ?? [], input.date === today, now.getHours() * 60 + now.getMinutes())
+  return { slots: candidates.map((slot) => {
     const window = resolvePricingWindow(slot.startMinutes, windows)
-    const hourlyRate = window?.hourly_rate ?? 0
-    return {
-      startTime: minutesToTime(slot.startMinutes),
-      endTime: minutesToTime(slot.endMinutes),
-      available: slot.available,
-      hourlyRate,
-      total: calculateTotal(hourlyRate, input.durationMinutes),
-      pricingWindowId: window?.id ?? null,
-      pricingWindowLabel: window?.label ?? null,
-    }
-  })
-
-  return { slots }
+    const total = calculateSplitTotal(slot.startMinutes, slot.endMinutes, windows)
+    return { startTime: minutesToTime(slot.startMinutes), endTime: minutesToTime(slot.endMinutes), available: slot.available && total !== null, hourlyRate: window?.hourly_rate ?? 0, total: total ?? 0, pricingWindowId: window?.id ?? null, pricingWindowLabel: window?.label || (window ? `${window.start_time}–${window.end_time}` : null) }
+  }) }
 }
 
 export interface CreateBookingInput {
@@ -94,81 +67,53 @@ export interface CreateBookingInput {
   startTime: string
   endTime: string
   durationMinutes: number
-  pricingWindowId: string | null
-  hourlyRate: number
-  total: number
   customerName: string
   customerPhone: string
   notes?: string
 }
 
-export async function createBooking(
-  input: CreateBookingInput,
-): Promise<{ success: true } | { error: string }> {
+export async function createBooking(input: CreateBookingInput): Promise<{ success: true; booking: { id: string; reference: string; amount: number } } | { error: string }> {
+  if (!isValidDate(input.date) || input.date < new Date().toISOString().slice(0, 10)) return { error: 'Bookings must be made for today or a future date.' }
+  if (!VALID_DURATIONS.has(input.durationMinutes)) return { error: 'Please choose a valid duration.' }
+  if (!TIME_RE.test(input.startTime) || !TIME_RE.test(input.endTime) || !input.sportId) return { error: 'Please provide valid booking details.' }
+  if (!input.customerName.trim() || !/^[+\d][\d\s().-]{7,19}$/.test(input.customerPhone.trim())) return { error: 'Please provide a valid name and phone number.' }
+  const start = timeToMinutes(input.startTime)
+  const end = timeToMinutes(input.endTime)
+  if (start < 360 || end <= start || end > 1440 || end - start !== input.durationMinutes) return { error: 'That time slot is invalid.' }
   const supabase = await createClient()
-
-  if (!input.sportId || !/^\d{4}-\d{2}-\d{2}$/.test(input.date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.startTime) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.endTime) || !Number.isInteger(input.durationMinutes) || input.durationMinutes <= 0 || input.durationMinutes > 24 * 60) {
-    return { error: 'Please provide valid booking details.' }
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'You must be logged in to book a slot.' }
-  }
-
-  // Re-check for overlaps right before insert to close the race window between
-  // the client fetching slots and submitting the booking.
-  const { data: existingBookings, error: conflictError } = await supabase
-    .from('bookings')
-    .select('start_time, end_time')
-    .eq('sport_id', input.sportId)
-    .eq('booking_date', input.date)
-    .in('booking_status', ['pending', 'confirmed'])
-
-  if (conflictError) {
-    return { error: 'Could not verify slot availability. Please try again.' }
-  }
-
-  const newStart = timeToMinutes(input.startTime)
-  let newEnd = timeToMinutes(input.endTime)
-  if (newEnd <= newStart) newEnd += 1440
-
-  const hasOverlap = (existingBookings ?? []).some((booking) => {
-    const bookedStart = timeToMinutes(booking.start_time)
-    let bookedEnd = timeToMinutes(booking.end_time)
-    if (bookedEnd <= bookedStart) bookedEnd += 1440
-    return newStart < bookedEnd && newEnd > bookedStart
-  })
-
-  if (hasOverlap) {
-    return { error: 'This slot was just booked by someone else. Please choose another.' }
-  }
-
-  const { error: insertError } = await supabase.from('bookings').insert({
-    user_id: user.id,
-    sport_id: input.sportId,
-    booking_date: input.date,
-    start_time: input.startTime,
-    end_time: input.endTime,
-    duration: Math.ceil(input.durationMinutes / 60),
-    amount: input.total,
-    booking_status: 'confirmed',
-    payment_status: 'pending',
-  })
-
-  if (insertError) {
-    if (insertError.code === '23505') {
-      return { error: 'This exact slot was just booked. Please choose another.' }
-    }
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) return { error: 'Your session has expired. Please log in again.' }
+  const { data, error } = await supabase.rpc('create_booking_atomic', { p_sport_id: input.sportId, p_booking_date: input.date, p_start_time: input.startTime, p_end_time: input.endTime === '00:00' ? '24:00' : input.endTime, p_duration_minutes: input.durationMinutes, p_customer_name: input.customerName.trim(), p_customer_phone: input.customerPhone.trim(), p_notes: input.notes?.trim() || null }).single()
+  if (error) {
+    const message = error.message
+    if (message.includes('SLOT_UNAVAILABLE')) return { error: 'This slot is no longer available. Please choose another.' }
+    if (message.includes('INVALID_SPORT')) return { error: 'That sport is not available.' }
+    if (message.includes('PRICE_UNAVAILABLE')) return { error: 'Pricing is unavailable for that time. Please choose another slot.' }
+    if (message.includes('UNAUTHORIZED')) return { error: 'Your session has expired. Please log in again.' }
     return { error: 'Could not create your booking. Please try again.' }
   }
+  revalidatePath('/bookings'); revalidatePath('/dashboard'); revalidatePath('/admin')
+  return { success: true, booking: { id: data.id, reference: data.booking_reference, amount: Number(data.amount) } }
+}
 
-  revalidatePath('/bookings')
-  revalidatePath('/dashboard')
-  revalidatePath('/admin')
+export async function getBooking(bookingId: string) {
+  const supabase = await createClient(); const { data: user } = await supabase.auth.getUser()
+  if (!user.user) return { error: 'Unauthorized' }
+  const { data, error } = await supabase.from('bookings').select('id, booking_reference, user_id, sport_id, booking_date, start_time, end_time, duration, amount, booking_status, payment_status, created_at, sports(name)').eq('id', bookingId).eq('user_id', user.user.id).maybeSingle()
+  return error || !data ? { error: 'Booking not found.' } : { booking: data }
+}
 
-  return { success: true }
+export async function getCustomerBookings() {
+  const supabase = await createClient(); const { data: user } = await supabase.auth.getUser()
+  if (!user.user) return { error: 'Unauthorized' }
+  const { data, error } = await supabase.from('bookings').select('id, booking_reference, booking_date, start_time, end_time, duration, amount, booking_status, payment_status, sports(name)').eq('user_id', user.user.id).order('booking_date', { ascending: false }).order('start_time', { ascending: false })
+  return error ? { error: 'Could not load bookings.' } : { bookings: data ?? [] }
+}
+
+export async function calculatePrice(input: { startTime: string; endTime: string }) {
+  const supabase = await createClient(); const { data, error } = await supabase.from('pricing').select('id, start_time, end_time, price_per_hour').eq('active', true)
+  if (error) return { error: 'Could not load pricing.' }
+  const windows = (data ?? []).map((row) => ({ id: row.id, label: '', range_label: null, start_time: row.start_time, end_time: row.end_time, hourly_rate: Number(row.price_per_hour) }))
+  const total = calculateSplitTotal(timeToMinutes(input.startTime), timeToMinutes(input.endTime), windows)
+  return total === null ? { error: 'Pricing unavailable.' } : { total }
 }

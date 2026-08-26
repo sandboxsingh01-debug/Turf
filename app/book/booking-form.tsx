@@ -90,7 +90,6 @@ export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormPr
         durationMinutes,
         pricingWindowId: selectedSlot.pricingWindowId,
         hourlyRate: selectedSlot.hourlyRate,
-        total: selectedSlot.total,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         notes: notes.trim() || undefined,
@@ -111,7 +110,7 @@ export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormPr
         <div className="flex flex-col items-center gap-4 text-center">
           <CheckCircle2 className="size-12 text-success" />
           <div>
-            <h2 className="font-heading text-2xl font-black uppercase tracking-wide text-foreground">Booking confirmed!</h2>
+            <h2 className="font-heading text-2xl font-black uppercase tracking-wide text-foreground">Booking reserved</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {selectedSport?.name} on {date} from {selectedSlot?.startTime} to {selectedSlot?.endTime}.
             </p>
@@ -234,8 +233,7 @@ export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormPr
                 >
                   <span className="font-heading font-bold text-foreground">{slot.startTime}</span>
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    {CURRENCY}
-                    {slot.total.toLocaleString('en-IN')}
+                    {slot.available ? `${CURRENCY}${slot.total.toLocaleString('en-IN')} · Available` : 'Booked'}
                   </span>
                 </button>
               )
@@ -297,7 +295,7 @@ export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormPr
               {isPending ? 'Confirming…' : `Confirm booking — ${CURRENCY}${selectedSlot.total.toLocaleString('en-IN')}`}
             </Button>
             <p className="text-center text-xs text-subtle-foreground">
-              Payment isn&apos;t collected yet — bookings are confirmed immediately without checkout.
+              Payment placeholder: your booking is pending payment and will be confirmed after checkout is connected.
             </p>
           </div>
         </div>
