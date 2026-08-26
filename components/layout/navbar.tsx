@@ -75,7 +75,7 @@ function Navbar() {
                 Log out
               </Button>
             </>
-          )}
+          ) : null}
           <Button size="sm" render={<Link href="/book">Book Now <ArrowUpRight className="size-3.5" /></Link>} />
         </div>
 
@@ -123,7 +123,7 @@ function Navbar() {
                     Log out
                   </Button>
                 </>
-              )}
+              ) : null}
               <Button
                 size="sm"
                 render={
