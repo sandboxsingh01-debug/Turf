@@ -4,14 +4,18 @@ import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function isoDate(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
 }
 
-export function HomeDateSelector({ maxAdvanceDays = 2 }: { maxAdvanceDays?: number }) {
-  const today = new Date()
+function addDays(iso: string, days: number) {
+  const [year, month, day] = iso.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day + days))
+  return date
+}
+
+export function HomeDateSelector({ maxAdvanceDays = 2, todayIso }: { maxAdvanceDays?: number; todayIso: string }) {
   const dates = Array.from({ length: Math.max(3, maxAdvanceDays + 1) }, (_, index) => {
-    const date = new Date(today)
-    date.setDate(today.getDate() + index)
+    const date = addDays(todayIso, index)
     return { key: isoDate(date), date }
   })
 
@@ -37,9 +41,9 @@ export function HomeDateSelector({ maxAdvanceDays = 2 }: { maxAdvanceDays?: numb
                   available ? 'hover:border-primary' : 'cursor-not-allowed opacity-35',
                 )}
               >
-                <span className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">{index === 0 ? 'Today' : date.toLocaleDateString('en-IN', { weekday: 'short' })}</span>
+                <span className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">{index === 0 ? 'Today' : date.toLocaleDateString('en-IN', { weekday: 'short', timeZone: 'UTC' })}</span>
                 <span className="mt-1 block font-heading text-lg font-black text-foreground">{date.getDate()}</span>
-                <span className="block text-[10px] font-bold uppercase text-muted-foreground">{date.toLocaleDateString('en-IN', { month: 'short' })}</span>
+                <span className="block text-[10px] font-bold uppercase text-muted-foreground">{date.toLocaleDateString('en-IN', { month: 'short', timeZone: 'UTC' })}</span>
               </a>
             )
           })}

@@ -40,11 +40,12 @@ export default async function HomePage() {
     .eq('id', true)
     .maybeSingle()
   const maxAdvanceDays = bookingSettings?.max_advance_days ?? 2
+  const todayIso = new Date().toISOString().slice(0, 10)
 
   return (
     <>
       <Navbar />
-      <HomeDateSelector maxAdvanceDays={maxAdvanceDays} />
+      <HomeDateSelector maxAdvanceDays={maxAdvanceDays} todayIso={todayIso} />
       <main>
         {/* ── COMPACT HERO ── */}
         <section className="relative overflow-hidden border-b-[3px] border-border-strong">
