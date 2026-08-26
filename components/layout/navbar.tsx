@@ -75,8 +75,6 @@ function Navbar() {
                 Log out
               </Button>
             </>
-          ) : (
-            <Button variant="ghost" size="sm" render={<Link href="/login">Log in</Link>} />
           )}
           <Button size="sm" render={<Link href="/book">Book Now <ArrowUpRight className="size-3.5" /></Link>} />
         </div>
@@ -125,16 +123,6 @@ function Navbar() {
                     Log out
                   </Button>
                 </>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <Link href="/login" onClick={() => setOpen(false)}>
-                      Log in
-                    </Link>
-                  }
-                />
               )}
               <Button
                 size="sm"
