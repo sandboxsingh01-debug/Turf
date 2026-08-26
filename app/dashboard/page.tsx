@@ -22,22 +22,22 @@ export default async function DashboardPage() {
     booking_date: string
     start_time: string
     end_time: string
-    total_amount: number
-    status: string
+    amount: number
+    booking_status: string
     sports: { name: string } | null
   }> = []
 
   if (user) {
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name')
+      .from('users')
+      .select('name')
       .eq('id', user.id)
       .single()
-    displayName = profile?.full_name || user.email?.split('@')[0] || 'there'
+    displayName = profile?.name || user.email?.split('@')[0] || 'there'
 
     const { data } = await supabase
       .from('bookings')
-      .select('id, sport_id, booking_date, start_time, end_time, total_amount, status, sports(name)')
+      .select('id, sport_id, booking_date, start_time, end_time, amount, booking_status, sports(name)')
       .eq('user_id', user.id)
       .order('booking_date', { ascending: false })
       .order('start_time', { ascending: false })
@@ -47,12 +47,12 @@ export default async function DashboardPage() {
 
   const todayIso = new Date().toISOString().slice(0, 10)
   const upcoming = bookings
-    .filter((b) => b.status !== 'cancelled' && b.booking_date >= todayIso)
+    .filter((b) => b.booking_status !== 'cancelled' && b.booking_date >= todayIso)
     .sort((a, b) => a.booking_date.localeCompare(b.booking_date) || a.start_time.localeCompare(b.start_time))
   const nextBooking = upcoming[0]
   const totalSpent = bookings
-    .filter((b) => b.status === 'confirmed' || b.status === 'completed')
-    .reduce((sum, b) => sum + b.total_amount, 0)
+    .filter((b) => b.booking_status === 'confirmed' || b.booking_status === 'completed')
+    .reduce((sum, b) => sum + Number(b.amount), 0)
 
   return (
     <AccountShell>

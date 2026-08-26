@@ -19,7 +19,7 @@ export default async function BookingsPage() {
     ? await supabase
         .from('bookings')
         .select(
-          'id, sport_id, booking_date, start_time, end_time, total_amount, status, sports(name)',
+          'id, sport_id, booking_date, start_time, end_time, amount, booking_status, sports(name)',
         )
         .eq('user_id', user.id)
         .order('booking_date', { ascending: false })
@@ -54,8 +54,8 @@ export default async function BookingsPage() {
                 date={booking.booking_date}
                 startTime={booking.start_time}
                 endTime={booking.end_time}
-                total={booking.total_amount}
-                status={booking.status}
+                total={Number(booking.amount)}
+                status={booking.booking_status}
                 currency={CURRENCY}
               />
             ))}

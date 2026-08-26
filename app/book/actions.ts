@@ -30,9 +30,10 @@ export async function getAvailableSlots(input: {
   const supabase = await createClient()
 
   const { data: pricingWindows, error: pricingError } = await supabase
-    .from('pricing_windows')
-    .select('id, label, range_label, start_time, end_time, hourly_rate')
-    .order('sort_order')
+    .from('pricing')
+    .select('id, start_time, end_time, price_per_hour')
+    .eq('active', true)
+    .order('start_time')
 
   if (pricingError) {
     return { error: 'Could not load pricing. Please try again.' }
@@ -43,7 +44,7 @@ export async function getAvailableSlots(input: {
     .select('start_time, end_time')
     .eq('sport_id', input.sportId)
     .eq('booking_date', input.date)
-    .in('status', ['pending', 'confirmed'])
+    .in('booking_status', ['pending', 'confirmed'])
 
   if (bookingsError) {
     return { error: 'Could not check availability. Please try again.' }
@@ -63,7 +64,12 @@ export async function getAvailableSlots(input: {
     nowMinutes,
   )
 
-  const windows: PricingWindowRow[] = pricingWindows ?? []
+  const windows: PricingWindowRow[] = (pricingWindows ?? []).map((row) => ({
+    id: row.id,
+    start_time: row.start_time,
+    end_time: row.end_time,
+    hourly_rate: Number(row.price_per_hour),
+  }))
 
   const slots: SlotOption[] = candidates.map((slot) => {
     const window = resolvePricingWindow(slot.startMinutes, windows)
@@ -101,6 +107,10 @@ export async function createBooking(
 ): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient()
 
+  if (!input.sportId || !/^\d{4}-\d{2}-\d{2}$/.test(input.date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.startTime) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.endTime) || !Number.isInteger(input.durationMinutes) || input.durationMinutes <= 0 || input.durationMinutes > 24 * 60) {
+    return { error: 'Please provide valid booking details.' }
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -116,7 +126,7 @@ export async function createBooking(
     .select('start_time, end_time')
     .eq('sport_id', input.sportId)
     .eq('booking_date', input.date)
-    .in('status', ['pending', 'confirmed'])
+    .in('booking_status', ['pending', 'confirmed'])
 
   if (conflictError) {
     return { error: 'Could not verify slot availability. Please try again.' }
@@ -143,14 +153,10 @@ export async function createBooking(
     booking_date: input.date,
     start_time: input.startTime,
     end_time: input.endTime,
-    duration_minutes: input.durationMinutes,
-    pricing_window_id: input.pricingWindowId,
-    hourly_rate_snapshot: input.hourlyRate,
-    total_amount: input.total,
-    status: 'confirmed',
-    customer_name: input.customerName,
-    customer_phone: input.customerPhone,
-    notes: input.notes || null,
+    duration: Math.ceil(input.durationMinutes / 60),
+    amount: input.total,
+    booking_status: 'confirmed',
+    payment_status: 'pending',
   })
 
   if (insertError) {
