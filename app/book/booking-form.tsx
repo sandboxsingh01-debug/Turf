@@ -22,6 +22,7 @@ interface BookingFormProps {
   sports: SportRow[]
   defaultName: string
   defaultPhone: string
+  defaultEmail: string
 }
 
 function todayIso() {
@@ -31,7 +32,7 @@ function todayIso() {
   ).padStart(2, '0')}`
 }
 
-export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormProps) {
+export function BookingForm({ sports, defaultName, defaultPhone, defaultEmail }: BookingFormProps) {
   const router = useRouter()
   const [sportId, setSportId] = useState(sports[0]?.id ?? '')
   const [date, setDate] = useState(todayIso())
@@ -43,7 +44,9 @@ export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormPr
 
   const [customerName, setCustomerName] = useState(defaultName)
   const [customerPhone, setCustomerPhone] = useState(defaultPhone)
+  const [customerEmail, setCustomerEmail] = useState(defaultEmail)
   const [notes, setNotes] = useState('')
+  const [idempotencyKey] = useState(() => `${Date.now()}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`)
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -90,7 +93,9 @@ export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormPr
         durationMinutes,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
+        customerEmail: customerEmail.trim(),
         notes: notes.trim() || undefined,
+        idempotencyKey,
       })
 
       if ('error' in result) {
@@ -274,6 +279,15 @@ export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormPr
                   type="tel"
                   value={customerPhone}
                   onChange={(event) => setCustomerPhone(event.target.value)}
+                  required
+                />
+              </FormField>
+              <FormField label="Email address" htmlFor="customer-email">
+                <Input
+                  id="customer-email"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(event) => setCustomerEmail(event.target.value)}
                   required
                 />
               </FormField>

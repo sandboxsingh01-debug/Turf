@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { createHash, randomBytes } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { generateCandidateSlots, minutesToTime, resolvePricingWindow, timeToMinutes, type PricingWindowRow } from '@/lib/slots'
 
@@ -69,10 +70,12 @@ export interface CreateBookingInput {
   durationMinutes: number
   customerName: string
   customerPhone: string
+  customerEmail: string
   notes?: string
+  idempotencyKey: string
 }
 
-export async function createBooking(input: CreateBookingInput): Promise<{ success: true; booking: { id: string; reference: string; amount: number } } | { error: string }> {
+export async function createBooking(input: CreateBookingInput): Promise<{ success: true; booking: { reference: string; amount: number; token: string } } | { error: string }> {
   if (!isValidDate(input.date) || input.date < new Date().toISOString().slice(0, 10)) return { error: 'Bookings must be made for today or a future date.' }
   if (!VALID_DURATIONS.has(input.durationMinutes)) return { error: 'Please choose a valid duration.' }
   if (!TIME_RE.test(input.startTime) || !TIME_RE.test(input.endTime) || !input.sportId) return { error: 'Please provide valid booking details.' }
@@ -80,10 +83,12 @@ export async function createBooking(input: CreateBookingInput): Promise<{ succes
   const start = timeToMinutes(input.startTime)
   const end = timeToMinutes(input.endTime)
   if (start < 360 || end <= start || end > 1440 || end - start !== input.durationMinutes) return { error: 'That time slot is invalid.' }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.customerEmail.trim())) return { error: 'Please provide a valid email address.' }
+  if (!/^[a-zA-Z0-9_-]{16,80}$/.test(input.idempotencyKey)) return { error: 'Please try submitting again.' }
   const supabase = await createClient()
-  const { data: user } = await supabase.auth.getUser()
-  if (!user.user) return { error: 'Your session has expired. Please log in again.' }
-  const { data, error } = await supabase.rpc('create_booking_atomic', { p_sport_id: input.sportId, p_booking_date: input.date, p_start_time: input.startTime, p_end_time: input.endTime === '00:00' ? '24:00' : input.endTime, p_duration_minutes: input.durationMinutes, p_customer_name: input.customerName.trim(), p_customer_phone: input.customerPhone.trim(), p_notes: input.notes?.trim() || null }).single() as { data: { id: string; booking_reference: string; amount: number | string } | null; error: { message: string } | null }
+  const publicToken = randomBytes(32).toString('base64url')
+  const tokenHash = createHash('sha256').update(publicToken).digest('hex')
+  const { data, error } = await supabase.rpc('create_guest_booking_atomic', { p_sport_id: input.sportId, p_booking_date: input.date, p_start_time: input.startTime, p_end_time: input.endTime === '00:00' ? '24:00' : input.endTime, p_duration_minutes: input.durationMinutes, p_customer_name: input.customerName.trim(), p_customer_phone: input.customerPhone.trim(), p_customer_email: input.customerEmail.trim(), p_idempotency_key: input.idempotencyKey, p_public_token_hash: tokenHash }).single() as { data: { id: string; booking_reference: string; amount: number | string } | null; error: { message: string } | null }
   if (error) {
     const message = error.message
     if (message.includes('SLOT_UNAVAILABLE')) return { error: 'This slot is no longer available. Please choose another.' }
@@ -94,7 +99,7 @@ export async function createBooking(input: CreateBookingInput): Promise<{ succes
   }
   if (!data) return { error: 'Could not create your booking. Please try again.' }
   revalidatePath('/bookings'); revalidatePath('/dashboard'); revalidatePath('/admin')
-  return { success: true, booking: { id: data.id, reference: data.booking_reference, amount: Number(data.amount) } }
+  return { success: true, booking: { reference: data.booking_reference, amount: Number(data.amount), token: publicToken } }
 }
 
 export async function getBooking(bookingId: string) {
