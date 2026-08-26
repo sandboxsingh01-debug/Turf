@@ -14,5 +14,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth/error`)
+  const errorCode = searchParams.get('error_code') ?? 'auth_callback_failed'
+  const errorDescription = searchParams.get('error_description')
+  const errorUrl = new URL('/auth/error', origin)
+  errorUrl.searchParams.set('error_code', errorCode)
+  if (errorDescription) errorUrl.searchParams.set('error_description', errorDescription)
+
+  return NextResponse.redirect(errorUrl)
 }
