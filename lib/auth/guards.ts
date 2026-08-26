@@ -18,7 +18,7 @@ export async function requireAdmin() {
     return { supabase: await createClient(), user: null }
   }
 
-  const { supabase, user } = await requireUser('/admin/login')
+  const { supabase, user } = await requireUser('/admin-login')
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'admin') redirect('/dashboard')
   return { supabase, user }
