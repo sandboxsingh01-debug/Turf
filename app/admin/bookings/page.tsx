@@ -1,74 +1,14 @@
-import { CalendarClock } from 'lucide-react'
-
+import Link from 'next/link'
+import { CalendarClock, Search } from 'lucide-react'
 import { EmptyState } from '@/components/ui/state'
-import { createClient } from '@/lib/supabase/server'
-import { AdminBookingRow } from './booking-row'
-import { AdminBookingsFilter } from './bookings-filter'
-import type { BookingStatus } from './actions'
+import { Badge } from '@/components/ui/badge'
+import { getAdminBookings, getSports, money } from '@/lib/admin/data'
 
-interface AdminBookingsPageProps {
-  searchParams: Promise<{ status?: string }>
-}
-
-export default async function AdminBookingsPage({ searchParams }: AdminBookingsPageProps) {
-  const { status: statusFilter } = await searchParams
-  const supabase = await createClient()
-
-  let query = supabase
-    .from('bookings')
-    .select(
-      'id, booking_date, start_time, end_time, total_amount, status, customer_name, customer_phone, sports(name)',
-    )
-    .order('booking_date', { ascending: false })
-    .order('start_time', { ascending: false })
-    .limit(100)
-
-  if (statusFilter && statusFilter !== 'all') {
-    query = query.eq('status', statusFilter)
-  }
-
-  const { data: bookings } = await query
-
-  return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Admin</span>
-        <h1 className="mt-2 font-heading text-3xl font-black uppercase tracking-tight text-foreground">Bookings</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Manage and review every reservation across both turfs.
-        </p>
-      </div>
-
-      <AdminBookingsFilter currentStatus={statusFilter ?? 'all'} />
-
-      {!bookings || bookings.length === 0 ? (
-        <EmptyState
-          icon={CalendarClock}
-          title="No bookings found"
-          description="Bookings will appear here as customers reserve slots, or adjust the filter above."
-        />
-      ) : (
-        <div className="border-[2px] border-border bg-card">
-          <div className="flex flex-col">
-            {bookings.map((booking: any) => (
-              <AdminBookingRow
-                key={booking.id}
-                booking={{
-                  id: booking.id,
-                  booking_date: booking.booking_date,
-                  start_time: booking.start_time,
-                  end_time: booking.end_time,
-                  total_amount: booking.total_amount,
-                  status: booking.status as BookingStatus,
-                  customer_name: booking.customer_name,
-                  customer_phone: booking.customer_phone,
-                  sport_name: booking.sports?.name ?? 'Unknown sport',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
+export default async function AdminBookingsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const params = await searchParams
+  const [{ bookings }, { data: sports }] = await Promise.all([getAdminBookings({ status: params.status, date: params.date, sportId: params.sportId, search: params.search }), getSports()])
+  return <div className="flex flex-col gap-8"><header><span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Admin / Operations</span><h1 className="mt-2 font-heading text-3xl font-black uppercase text-foreground">Bookings</h1><p className="mt-2 text-sm text-muted-foreground">Search, filter, and inspect every reservation.</p></header>
+    <form className="flex flex-wrap gap-2 border-[2px] border-border bg-card p-4" method="get"><label className="flex min-w-56 flex-1 items-center gap-2 border-[2px] border-border bg-background px-3"><Search className="size-4 text-primary" /><input name="search" defaultValue={params.search} placeholder="Reference, name, email, mobile" className="w-full bg-transparent py-2 text-sm text-foreground outline-none" /></label><input name="date" type="date" defaultValue={params.date} className="border-[2px] border-border bg-background px-3 text-sm text-foreground" /><select name="sportId" defaultValue={params.sportId ?? 'all'} className="border-[2px] border-border bg-background px-3 text-sm text-foreground"><option value="all">All sports</option>{(sports ?? []).map((sport) => <option key={sport.id} value={sport.id}>{sport.name}</option>)}</select><select name="status" defaultValue={params.status ?? 'all'} className="border-[2px] border-border bg-background px-3 text-sm text-foreground"><option value="all">All statuses</option>{['pending','confirmed','completed','cancelled'].map((s) => <option key={s}>{s}</option>)}</select><button className="border-[2px] border-primary bg-primary px-4 py-2 text-xs font-black uppercase tracking-wider text-primary-foreground">Filter</button></form>
+    {bookings.length === 0 ? <EmptyState icon={CalendarClock} title="No bookings found" description="Try adjusting the filters." /> : <div className="overflow-x-auto border-[2px] border-border bg-card"><table className="w-full min-w-[900px] text-left text-sm"><thead className="border-b-[2px] border-border bg-card-secondary text-[10px] font-black uppercase tracking-wider text-muted-foreground"><tr>{['Reference','Customer','Sport','Date','Time','Duration','Amount','Payment','Status'].map((h) => <th key={h} className="px-4 py-3">{h}</th>)}</tr></thead><tbody>{bookings.map((b: any) => <tr key={b.id} className="border-b border-border last:border-0"><td className="px-4 py-4"><Link href={`/admin/bookings/${b.id}`} className="font-heading font-black text-primary hover:underline">{b.booking_reference}</Link></td><td className="px-4 py-4"><p className="font-bold text-foreground">{b.users?.name || 'Unnamed'}</p><p className="text-xs text-muted-foreground">{b.users?.mobile || b.users?.email || '—'}</p></td><td className="px-4 py-4 text-muted-foreground">{b.sports?.name || '—'}</td><td className="px-4 py-4 text-muted-foreground">{b.booking_date}</td><td className="px-4 py-4 text-muted-foreground">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}</td><td className="px-4 py-4 text-muted-foreground">{b.duration}h</td><td className="px-4 py-4 font-black text-foreground">{money(b.amount)}</td><td className="px-4 py-4"><Badge>{b.payment_status}</Badge></td><td className="px-4 py-4"><Badge>{b.booking_status}</Badge></td></tr>)}</tbody></table></div>}
+  </div>
 }
