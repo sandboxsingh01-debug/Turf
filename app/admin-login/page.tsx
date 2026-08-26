@@ -2,13 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-
 import { Button } from '@/components/ui/button'
 import { FormField, Input } from '@/components/ui/form-field'
 
 export default function AdminLoginPage() {
-  const router = useRouter()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -31,8 +28,9 @@ export default function AdminLoginPage() {
       return
     }
 
-    router.replace('/admin')
-    router.refresh()
+    // Use a full navigation so the newly-issued HTTP-only cookie is included
+    // in the very first request to the protected dashboard.
+    window.location.assign('/admin')
   }
 
   return (
