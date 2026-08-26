@@ -88,8 +88,6 @@ export function BookingForm({ sports, defaultName, defaultPhone }: BookingFormPr
         startTime: selectedSlot.startTime,
         endTime: selectedSlot.endTime,
         durationMinutes,
-        pricingWindowId: selectedSlot.pricingWindowId,
-        hourlyRate: selectedSlot.hourlyRate,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         notes: notes.trim() || undefined,

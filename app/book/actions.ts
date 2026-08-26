@@ -83,7 +83,7 @@ export async function createBooking(input: CreateBookingInput): Promise<{ succes
   const supabase = await createClient()
   const { data: user } = await supabase.auth.getUser()
   if (!user.user) return { error: 'Your session has expired. Please log in again.' }
-  const { data, error } = await supabase.rpc('create_booking_atomic', { p_sport_id: input.sportId, p_booking_date: input.date, p_start_time: input.startTime, p_end_time: input.endTime === '00:00' ? '24:00' : input.endTime, p_duration_minutes: input.durationMinutes, p_customer_name: input.customerName.trim(), p_customer_phone: input.customerPhone.trim(), p_notes: input.notes?.trim() || null }).single()
+  const { data, error } = await supabase.rpc('create_booking_atomic', { p_sport_id: input.sportId, p_booking_date: input.date, p_start_time: input.startTime, p_end_time: input.endTime === '00:00' ? '24:00' : input.endTime, p_duration_minutes: input.durationMinutes, p_customer_name: input.customerName.trim(), p_customer_phone: input.customerPhone.trim(), p_notes: input.notes?.trim() || null }).single() as { data: { id: string; booking_reference: string; amount: number | string } | null; error: { message: string } | null }
   if (error) {
     const message = error.message
     if (message.includes('SLOT_UNAVAILABLE')) return { error: 'This slot is no longer available. Please choose another.' }
@@ -92,6 +92,7 @@ export async function createBooking(input: CreateBookingInput): Promise<{ succes
     if (message.includes('UNAUTHORIZED')) return { error: 'Your session has expired. Please log in again.' }
     return { error: 'Could not create your booking. Please try again.' }
   }
+  if (!data) return { error: 'Could not create your booking. Please try again.' }
   revalidatePath('/bookings'); revalidatePath('/dashboard'); revalidatePath('/admin')
   return { success: true, booking: { id: data.id, reference: data.booking_reference, amount: Number(data.amount) } }
 }

@@ -110,7 +110,7 @@ export default async function DashboardPage() {
                           {nextBooking.sports?.name ?? nextBooking.sport_id}
                         </p>
                         <Badge variant="success" className="capitalize">
-                          {nextBooking.status}
+                          {nextBooking.booking_status}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -124,7 +124,7 @@ export default async function DashboardPage() {
                         </span>
                         <span className="flex items-center gap-1.5">
                           <Wallet className="size-3.5" />
-                          {CURRENCY}{nextBooking.total_amount.toLocaleString('en-IN')}
+                          {CURRENCY}{Number(nextBooking.amount).toLocaleString('en-IN')}
                         </span>
                       </div>
                     </div>
