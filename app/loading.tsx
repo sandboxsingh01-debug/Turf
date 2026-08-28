@@ -23,7 +23,7 @@ function CricketBat() {
 function UrbanTurfMark() {
   return (
     <div className="loader-mark flex flex-col items-center" aria-hidden="true">
-      <img src="/urban-turf-logo.png" alt="" className="h-auto w-48 max-w-full object-contain" />
+      <img src="/urban-turf-logo-new.png" alt="" className="h-auto w-48 max-w-full object-contain" />
     </div>
   )
 }
@@ -53,7 +53,7 @@ export function UrbanTurfLoader() {
         .loader-bat { position: absolute; right: 4.5rem; top: .25rem; transform-origin: 32px 124px; animation: loader-swing 2.4s .55s cubic-bezier(.22,1,.36,1) both; }
         .loader-motion-line { position: absolute; right: 5.5rem; top: 7.5rem; width: 2.5rem; height: 2px; border-radius: 999px; background: var(--secondary); opacity: 0; animation: loader-impact 2.4s 1.45s ease-out both; }
         .loader-motion-line-two { top: 8.25rem; right: 4.75rem; width: 1.5rem; animation-delay: 1.52s; }
-        .loader-mark { display: flex; flex-direction: column; align-items: center; gap: .25rem; opacity: 0; animation: loader-reveal .7s 1.65s ease-out forwards; }
+        .loader-mark { display: flex; flex-direction: column; align-items: center; gap: .25rem; opacity: 0; animation: loader-reveal .7s .35s ease-out forwards; }
         .loader-dot { width: .375rem; height: .375rem; border-radius: 999px; background: var(--primary); animation: loader-pulse 1s ease-in-out infinite; }
         .loader-dot:nth-child(2) { animation-delay: .15s; }
         .loader-dot:nth-child(3) { animation-delay: .3s; }
