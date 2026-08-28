@@ -3,32 +3,32 @@
 @import 'shadcn/tailwind.css';
 
 :root {
-  --background: #0A0A0A;
-  --foreground: #F2F2F2;
-  --card: #111111;
-  --card-secondary: #181818;
-  --border: #2A2A2A;
-  --border-strong: #E5E5E5;
-  --input: #181818;
-  --ring: #C7A45D;
-  --muted: #181818;
-  --muted-foreground: #969696;
-  --subtle-foreground: #666666;
-  --primary: #C7A45D;
-  --primary-foreground: #0A0A0A;
-  --secondary: #181818;
-  --secondary-foreground: #F2F2F2;
-  --accent: #C7A45D;
-  --accent-foreground: #0A0A0A;
-  --success: #4D8C68;
-  --success-foreground: #EAF3EE;
-  --warning: #C7A45D;
-  --warning-foreground: #0A0A0A;
-  --destructive: #B65353;
-  --destructive-foreground: #FBECEC;
-  --popover: #111111;
-  --popover-foreground: #F2F2F2;
-  --radius: 0px;
+  --background: #F6F8F7;
+  --foreground: #26332F;
+  --card: #FFFFFF;
+  --card-secondary: #F0F5F3;
+  --border: #DCE4E1;
+  --border-strong: #1F5D50;
+  --input: #FFFFFF;
+  --ring: #1F5D50;
+  --muted: #F0F5F3;
+  --muted-foreground: #71807B;
+  --subtle-foreground: #8A9691;
+  --primary: #1F5D50;
+  --primary-foreground: #FFFFFF;
+  --secondary: #DDEFE9;
+  --secondary-foreground: #1F5D50;
+  --accent: #6FA99A;
+  --accent-foreground: #FFFFFF;
+  --success: #DFF3EA;
+  --success-foreground: #1F5D50;
+  --warning: #FEF3C7;
+  --warning-foreground: #92400E;
+  --destructive: #F5D9D9;
+  --destructive-foreground: #C95C5C;
+  --popover: #FFFFFF;
+  --popover-foreground: #26332F;
+  --radius: 0.75rem;
 }
 
 @theme inline {
