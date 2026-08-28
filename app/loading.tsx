@@ -22,14 +22,8 @@ function CricketBat() {
 
 function UrbanTurfMark() {
   return (
-    <div className="loader-mark" aria-hidden="true">
-      <svg viewBox="0 0 80 80" className="h-16 w-16" fill="none">
-        <path d="M40 6 66 16v21c0 17-10 29-26 37C24 66 14 54 14 37V16L40 6Z" stroke="var(--primary)" strokeWidth="4" />
-        <circle cx={34} cy={28} r={7} fill="var(--primary)" />
-        <path d="M40 36c-9-7-19 1-16 12l4 11h8l-2-13 10 4 9 9 6-5-11-13c-2-3-5-4-8-5Z" fill="var(--primary)" />
-        <circle cx={57} cy={51} r={6} fill="var(--primary)" />
-      </svg>
-      <span className="font-heading text-3xl font-black uppercase tracking-[0.12em] text-primary">Urban Turf</span>
+    <div className="loader-mark flex flex-col items-center" aria-hidden="true">
+      <img src="/urban-turf-logo.png" alt="" className="h-auto w-48 max-w-full object-contain" />
     </div>
   )
 }
