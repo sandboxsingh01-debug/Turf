@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk, Manrope } from 'next/font/google'
 import './globals.css'
+import { LoadingGate } from '@/components/layout/loading-gate'
 
 const _inter = Inter({ subsets: ['latin'], variable: '--font-sans-loaded' })
 const _spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-heading-loaded' })
@@ -35,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background" suppressHydrationWarning>
       <body className={`${_inter.variable} ${_spaceGrotesk.variable} ${_manrope.variable} antialiased font-sans`}>
-        {children}
+        <LoadingGate>{children}</LoadingGate>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
