@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import UrbanTurfLoader from '@/app/loading'
 
-const LOADER_DELAY_MS = 1800
+const LOADER_DELAY_MS = 3200
 
 export function LoadingGate({ children }: { children: React.ReactNode }) {
   const [showLoader, setShowLoader] = useState(true)
