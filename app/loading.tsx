@@ -1,11 +1,5 @@
 function Football() {
-  return (
-    <svg viewBox="0 0 72 72" aria-hidden="true" className="loader-football h-16 w-16">
-      <circle cx="36" cy="36" r="28" fill="var(--background)" stroke="var(--primary)" strokeWidth="2" />
-      <path d="m36 23 8 6-3 10H31l-3-10 8-6Z" fill="var(--primary)" />
-      <path d="m28 29-10 2m26-2 10 2M31 39l-5 10m15-10 5 10M36 23V13" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  )
+  return <img src="/urban-turf-football.png" alt="" aria-hidden="true" className="loader-football h-20 w-20 object-contain" />
 }
 
 function CricketBat() {
