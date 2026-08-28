@@ -8,9 +8,9 @@ const _spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-head
 const _manrope = Manrope({ subsets: ['latin'], variable: '--font-display-loaded' })
 
 export const metadata: Metadata = {
-  title: 'TurfBooking — Premium Cricket & Football Turf',
+  title: 'Urban Turf — Book a Slot',
   description:
-    'Book premium cricket and football turf slots. Transparent pricing, instant confirmation, professional-grade facilities.',
+    'Book premium cricket and football turf slots at Urban Turf. Transparent pricing and instant confirmation.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -23,8 +23,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'dark',
-  themeColor: '#0A0A0A',
+  colorScheme: 'light',
+  themeColor: '#F6F8F7',
 }
 
 export default function RootLayout({

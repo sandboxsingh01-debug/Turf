@@ -33,13 +33,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-60 shrink-0 border-r-[3px] border-border-strong bg-card sm:flex sm:flex-col">
-        <div className="flex h-16 items-center gap-3 border-b-[3px] border-border-strong px-5">
-          <span className="flex size-9 items-center justify-center border-[2px] border-primary bg-primary font-heading text-xs font-black text-primary-foreground">
-            TB
-          </span>
-          <span className="font-heading text-xs font-bold uppercase tracking-wider text-foreground">
-            {SITE.name} Admin
+      <aside className="hidden w-60 shrink-0 bg-primary text-primary-foreground sm:flex sm:flex-col">
+        <div className="flex h-16 items-center border-b border-primary-foreground/20 px-5">
+          <span className="font-heading text-xs font-semibold tracking-[0.16em] text-primary-foreground">
+            URBAN <span className="font-black">TURF</span> <span className="font-normal opacity-70">ADMIN</span>
           </span>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">

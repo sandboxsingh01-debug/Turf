@@ -148,7 +148,7 @@ export function BookingForm({ sports, initialDate, defaultName, defaultPhone, de
               type="button"
               onClick={() => setSportId(sport.id)}
               className={cn(
-                'border-[2px] bg-card px-5 py-4 text-left transition-all duration-150',
+                'rounded-xl border bg-card px-5 py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                 sportId === sport.id
                   ? 'border-primary bg-primary/10'
                   : 'border-border hover:border-primary/40 hover:-translate-y-[2px] hover:shadow-[4px_4px_0_0_var(--primary)]',
@@ -173,14 +173,14 @@ export function BookingForm({ sports, initialDate, defaultName, defaultPhone, de
           />
         </FormField>
         <FormField label="Duration" htmlFor="booking-duration">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {DURATION_OPTIONS.map((option) => (
               <button
                 key={option.minutes}
                 type="button"
                 onClick={() => setDurationMinutes(option.minutes)}
                 className={cn(
-                  'border-[2px] px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all duration-150',
+                  'min-h-11 rounded-full border px-4 py-2 text-sm font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   durationMinutes === option.minutes
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40',
@@ -219,7 +219,7 @@ export function BookingForm({ sports, initialDate, defaultName, defaultPhone, de
             description="Try a different date or duration."
           />
         ) : (
-          <div className="grid grid-cols-2 gap-[2px] bg-border sm:grid-cols-3 md:grid-cols-4">
+          <div className="max-h-[420px] overflow-y-auto divide-y divide-border rounded-xl border border-border bg-card">
             {slots.map((slot) => {
               const isSelected = selectedSlot?.startTime === slot.startTime
               return (
@@ -228,16 +228,23 @@ export function BookingForm({ sports, initialDate, defaultName, defaultPhone, de
                   type="button"
                   disabled={!slot.available}
                   onClick={() => setSelectedSlot(slot)}
+                  aria-label={`${slot.startTime} to ${slot.endTime}, ${isSelected ? 'selected' : slot.available ? 'available' : 'booked'}`}
+                  aria-disabled={!slot.available}
                   className={cn(
-                    'flex flex-col gap-0.5 border-[2px] bg-card px-3 py-3 text-left text-sm transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-30',
+                    'flex min-h-13 w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:cursor-not-allowed',
                     isSelected
-                      ? 'border-primary bg-primary/10'
-                      : 'border-transparent hover:border-primary/40 hover:-translate-y-[1px]',
+                      ? 'border-l-4 border-l-accent bg-secondary'
+                      : slot.available
+                        ? 'hover:bg-secondary/60'
+                        : 'bg-destructive/60 text-destructive-foreground opacity-70',
                   )}
                 >
-                  <span className="font-heading font-bold text-foreground">{slot.startTime}</span>
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    {slot.available ? `${CURRENCY}${slot.total.toLocaleString('en-IN')} · Available` : 'Booked'}
+                  <span className="font-heading font-bold text-foreground">{slot.startTime} – {slot.endTime}</span>
+                  <span className={cn(
+                    'rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wider',
+                    isSelected ? 'bg-accent text-accent-foreground' : slot.available ? 'bg-success text-success-foreground' : 'bg-destructive text-destructive-foreground',
+                  )}>
+                    {isSelected ? 'Selected' : slot.available ? `${CURRENCY}${slot.total.toLocaleString('en-IN')} · Available` : 'Booked'}
                   </span>
                 </button>
               )

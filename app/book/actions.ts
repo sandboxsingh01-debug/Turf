@@ -55,11 +55,25 @@ export async function getAvailableSlots(input: { sportId: string; date: string; 
   const now = new Date()
   const today = now.toISOString().slice(0, 10)
   const candidates = generateCandidateSlots(input.durationMinutes, existingBookings ?? [], input.date === today, now.getHours() * 60 + now.getMinutes())
-  return { slots: candidates.map((slot) => {
-    const window = resolvePricingWindow(slot.startMinutes, windows)
-    const total = calculateSplitTotal(slot.startMinutes, slot.endMinutes, windows)
-    return { startTime: minutesToTime(slot.startMinutes), endTime: minutesToTime(slot.endMinutes), available: slot.available && total !== null, hourlyRate: window?.hourly_rate ?? 0, total: total ?? 0, pricingWindowId: window?.id ?? null, pricingWindowLabel: window?.label || (window ? `${window.start_time}–${window.end_time}` : null) }
-  }) }
+  const slots = candidates
+    .map((slot) => {
+      const window = resolvePricingWindow(slot.startMinutes, windows)
+      const total = calculateSplitTotal(slot.startMinutes, slot.endMinutes, windows)
+      return {
+        startTime: minutesToTime(slot.startMinutes),
+        endTime: minutesToTime(slot.endMinutes),
+        available: slot.available && total !== null,
+        hourlyRate: window?.hourly_rate ?? 0,
+        total: total ?? 0,
+        pricingWindowId: window?.id ?? null,
+        pricingWindowLabel: window?.label || (window ? `${window.start_time}–${window.end_time}` : null),
+      }
+    })
+    // Occupied starts are removed entirely. A booking from 10:00–11:00
+    // must also hide overlapping starts such as 10:30, not merely disable them.
+    .filter((slot) => slot.available)
+
+  return { slots }
 }
 
 export interface CreateBookingInput {
