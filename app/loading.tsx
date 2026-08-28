@@ -3,7 +3,7 @@ function Football() {
 }
 
 function CricketBat() {
-  return <img src="/urban-turf-bat.png" alt="" aria-hidden="true" className="loader-bat h-40 w-14 object-contain" />
+  return <img src="/urban-turf-bat.png" alt="" aria-hidden="true" className="loader-bat h-52 w-16 object-contain" />
 }
 
 function UrbanTurfMark() {
