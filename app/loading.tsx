@@ -1,23 +1,9 @@
 function Football() {
-  return (
-    <svg viewBox="0 0 72 72" aria-hidden="true" className="loader-football h-16 w-16">
-      <circle cx="36" cy="36" r="28" fill="var(--background)" stroke="var(--primary)" strokeWidth="2" />
-      <path d="m36 23 8 6-3 10H31l-3-10 8-6Z" fill="var(--primary)" />
-      <path d="m28 29-10 2m26-2 10 2M31 39l-5 10m15-10 5 10M36 23V13" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  )
+  return <img src="/urban-turf-football.png" alt="" aria-hidden="true" className="loader-football h-10 w-10 object-contain" />
 }
 
 function CricketBat() {
-  return (
-    <svg viewBox="0 0 64 150" aria-hidden="true" className="loader-bat h-36 w-16">
-      <path d="M27 6h10v23H27z" fill="var(--primary)" />
-      <path d="M23 28h18l8 87c.7 8-5 14-16.5 14S15.8 123 16.5 115l6.5-87Z" fill="var(--secondary)" stroke="var(--primary)" strokeWidth="2" />
-      <path d="M22 42h20M21 53h22M20 64h24" stroke="var(--primary)" strokeWidth="2" opacity=".35" />
-      <path d="M18 116h28v10H18z" fill="var(--primary)" opacity=".75" />
-      <path d="M25 127h14v16H25z" fill="var(--primary)" />
-    </svg>
-  )
+  return <img src="/urban-turf-bat.png" alt="" aria-hidden="true" className="loader-bat h-52 w-16 object-contain" />
 }
 
 function UrbanTurfMark() {
