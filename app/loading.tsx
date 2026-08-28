@@ -1,5 +1,5 @@
 function Football() {
-  return <img src="/urban-turf-football.png" alt="" aria-hidden="true" className="loader-football h-11 w-11 object-contain" />
+  return <img src="/urban-turf-football.png" alt="" aria-hidden="true" className="loader-football h-10 w-10 object-contain" />
 }
 
 function CricketBat() {
